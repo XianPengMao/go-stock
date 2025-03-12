@@ -2,9 +2,10 @@ package data
 
 import (
 	"context"
-	"github.com/chromedp/chromedp"
 	"go-stock/backend/logger"
 	"time"
+
+	"github.com/chromedp/chromedp"
 )
 
 // @Author spark
@@ -30,12 +31,29 @@ func (c *CrawlerApi) NewCrawler(ctx context.Context, crawlerBaseInfo CrawlerBase
 }
 
 func (c *CrawlerApi) GetHtml(url, waitVisible string, headless bool) (string, bool) {
+	// 添加重试机制
+	maxRetries := 3
+	for i := 0; i < maxRetries; i++ {
+		html, err := c.getHtmlWithRetry(url, waitVisible, headless)
+		if err == nil {
+			return html, true
+		}
+		time.Sleep(time.Second * time.Duration(i+1))
+	}
+	return "", false
+}
+
+func (c *CrawlerApi) getHtmlWithRetry(url, waitVisible string, headless bool) (string, error) {
+	// 添加超时控制
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
 	htmlContent := ""
 	path, e := checkBrowserOnWindows()
 	logger.SugaredLogger.Infof("GetHtml path:%s", path)
 	if e {
 		pctx, pcancel := chromedp.NewExecAllocator(
-			c.crawlerCtx,
+			ctx,
 			chromedp.ExecPath(path),
 			chromedp.Flag("headless", headless),
 			chromedp.Flag("blink-settings", "imagesEnabled=false"),
@@ -75,19 +93,18 @@ func (c *CrawlerApi) GetHtml(url, waitVisible string, headless bool) (string, bo
 		)
 		if err != nil {
 			logger.SugaredLogger.Error(err.Error())
-			return "", false
+			return "", err
 		}
 	} else {
-		ctx, cancel := chromedp.NewContext(c.crawlerCtx, chromedp.WithLogf(logger.SugaredLogger.Infof))
+		ctx, cancel := chromedp.NewContext(ctx, chromedp.WithLogf(logger.SugaredLogger.Infof))
 		defer cancel()
 		err := chromedp.Run(ctx, chromedp.Navigate(url), chromedp.WaitVisible("body"), chromedp.InnerHTML("body", &htmlContent))
 		if err != nil {
 			logger.SugaredLogger.Error(err.Error())
-			return "", false
+			return "", err
 		}
 	}
-	return htmlContent, true
-
+	return htmlContent, nil
 }
 
 func (c *CrawlerApi) GetHtmlWithNoCancel(url, waitVisible string, headless bool) (html string, ok bool, parent context.CancelFunc, child context.CancelFunc) {

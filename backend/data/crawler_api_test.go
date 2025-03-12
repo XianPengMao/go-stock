@@ -4,15 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/duke-git/lancet/v2/strutil"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"go-stock/backend/models"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/PuerkitoBio/goquery"
+	"github.com/duke-git/lancet/v2/strutil"
 
 	"github.com/chromedp/chromedp"
 	"github.com/stretchr/testify/assert"
@@ -80,6 +82,13 @@ func TestGetHtml(t *testing.T) {
 		})
 	}
 	//logger.SugaredLogger.Infof("htmlContent:%s", htmlContent)
+
+	// 使用 filepath.Clean 处理路径
+	got := filepath.Clean(url)
+	want := filepath.Clean("https://www.cls.cn/searchPage?type=depth&keyword=%E6%96%B0%E5%B8%8C%E6%9C%9B")
+	if got != want {
+		t.Errorf("got %v want %v", got, want)
+	}
 }
 
 func TestGetHtmlWithActions(t *testing.T) {

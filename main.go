@@ -4,6 +4,15 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"go-stock/backend/data"
+	"go-stock/backend/db"
+	"go-stock/backend/models"
+	"log"
+	"os"
+	goruntime "runtime"
+	"runtime/debug"
+	"time"
+
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/logger"
@@ -13,14 +22,6 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
-	"go-stock/backend/data"
-	"go-stock/backend/db"
-	"go-stock/backend/models"
-	"log"
-	"os"
-	goruntime "runtime"
-	"runtime/debug"
-	"time"
 )
 
 //go:embed frontend/dist
